@@ -9,13 +9,13 @@ except socket.error as e:
     print(str(e))
 
 entrada = ClientMultiSocket.recv(1024)
+print(entrada)
 
 while entrada != "QUIT":
     entrada = input('>> ')
     ClientMultiSocket.send(str.encode(entrada)) # Envia comando ao server
     resposta = ClientMultiSocket.recv(1024).decode() # Recebe processamento do servidor
     print('Response from server:\n' + resposta)
-    entrada = input('>> ')
 
 # Processa QUIT
 ClientMultiSocket.send(str.encode(entrada)) # Envia comando ao server

@@ -166,7 +166,7 @@ def whoChannelHandler(canal, dicCanais):  # WHO
 
 
 def multi_threaded_client(connection):
-    connection.send(str.encode('Server funcionando...'))
+    connection.send(str.encode("Server funcionando..."))
     while True:
         data = connection.recv(2048).decode()
         address = address_conn(connection, addressclientes)
