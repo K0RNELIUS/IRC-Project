@@ -8,7 +8,7 @@ try:
 except socket.error as e:
     print(str(e))
 
-entrada = ClientMultiSocket.recv(1024)
+entrada = ClientMultiSocket.recv(1024).decode()
 print(entrada)
 
 while entrada != "QUIT":

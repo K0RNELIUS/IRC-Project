@@ -1,9 +1,6 @@
 import socket
 from _thread import *
 
-
-
-
 ServerSideSocket = socket.socket()
 host = '127.0.0.1'
 port = 2004
@@ -77,9 +74,10 @@ def quitHandler(address, dicAddresses, dicClientes, dicCanais):  # QUIT
                 dicCanais[canal].remove(usuario)
                 break
         for user in dicCanais[canal]:
-            msg = f'O user {usuario} saiu do canal {canal}'
+            msg = f'O user {user} saiu do canal {canal}'
             conn = conn_user(user, dicAddresses)
             conn.send(msg.encode())
+        return "Desconectando..." # MUDADOOOOO
 
 
 def subscribeChannelHandler(address, canal, dicAddresses, dicCanais):  # JOIN
@@ -138,15 +136,13 @@ def privMsgChannelHandler(address, entrada, msg, dicAddresses, dicClientes, dicC
             if user != user_origem:
                 conn = conn_user(user, dicAddresses)
                 conn.send(msg.encode())
-        return True
+        return f'Mensagem enviada para o canal {entrada}.'
     elif entrada in dicClientes.keys():
         msg = f'Mensagem recebida pelo {user_origem} -> ' + msg
         conn = conn_user(entrada, dicAddresses)
         conn.send(msg.encode())
-    else:
-        conn_origem = conn_user(user_origem, dicAddresses)
-        conn_origem.send("O user ou canal digitado n existe".encode())
-    return False
+        return f'Mensagem enviada para o user {entrada}.'
+    return "O user ou canal digitado n existe"
 
 
 def whoChannelHandler(canal, dicCanais):  # WHO
@@ -179,8 +175,7 @@ def multi_threaded_client(connection):
         elif data.split()[0] == "USER":
             data = newClientHandler(address, addressclientes, clientes)
         elif data.split()[0] == "QUIT":
-            quitHandler(address, addressclientes, clientes, canais)
-            comando_enviar_unico = False
+            data = quitHandler(address, addressclientes, clientes, canais)
         elif data.split()[0] == "JOIN":
             data = subscribeChannelHandler(address, " ".join(data.split()[1:]), addressclientes, canais)
         elif data.split()[0] == "PART":
@@ -188,17 +183,18 @@ def multi_threaded_client(connection):
         elif data.split()[0] == "LIST":
             data = listChannelHandler(canais)
         elif data.split()[0] == "PRIVMSG":
-            comando_enviar_unico = False
-            canal_teste = privMsgChannelHandler(address,
+            data = privMsgChannelHandler(address,
                                                 data.split()[1],
                                                 " ".join(data.split()[2:]),
                                                 addressclientes, clientes, canais)
-            if canal_teste:
-                data = "Mensagem enviada para o canal"
+
         elif data.split()[0] == "WHO":
             data = whoChannelHandler(data.split()[1], canais)
         else:
-            data = "Comando invalido"
+            if data[0] == "VISUALIZAR":
+                continue
+            else:
+                data = "Comando invalido"
 
         # =================================
         print(addressclientes)
@@ -206,8 +202,7 @@ def multi_threaded_client(connection):
         print(canais)
         # =================================
 
-        if comando_enviar_unico or canal_teste:
-            connection.send(data.encode())
+        connection.send(data.encode())
 
 while True:
     Client, address = ServerSideSocket.accept()
