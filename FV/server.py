@@ -1,6 +1,7 @@
 import socket
 from _thread import *
 
+# Inicializacao do servidor e algumas variaveis
 ServerSideSocket = socket.socket()
 host = '127.0.0.1'
 port = 2004
@@ -9,16 +10,14 @@ cond_parada = False
 cond = True
 
 '''
-------------------------------------
 Estrutura dos dicionarios definidos
-------------------------------------
+----------------------------------------------------------
 Estrutura address
 dic addresses -> chave address, valor: [nick, conn]
 Estrutura cliente
 dic clientes -> chave: nick, valor: [realname, host, port]
 Estrutura canais
 dic canais -> chave: nomecanal, valor: [nicks]
-------------------------------------
 '''
 
 # Inicializacao dos dics colocando alguns canais para teste
@@ -162,12 +161,12 @@ def whoChannelHandler(canal, dicCanais):  # WHO
 
 
 def multi_threaded_client(connection):
-    connection.send(str.encode("Server funcionando..."))
+    connection.send(str.encode("Server funcionando...")) # Avisa ao cliente que conexao foi confirmada
     while True:
-        data = connection.recv(2048).decode()
-        address = address_conn(connection, addressclientes)
-        comando_enviar_unico = True
-        canal_teste = False
+        data = connection.recv(2048).decode() # Recebe solicitacao de processamento
+        address = address_conn(connection, addressclientes) # Pega address usando a conexao
+
+        # Verifica qual comando foi solicitado
         if data.split()[0] == "NICK":
             data = nickClientHandler(address, data.split()[1], addressclientes, clientes, canais)
         elif data.split()[0] == "NAME":  # Comando pra alterar nome real, n presente no guia
@@ -187,37 +186,35 @@ def multi_threaded_client(connection):
                                                 data.split()[1],
                                                 " ".join(data.split()[2:]),
                                                 addressclientes, clientes, canais)
-
         elif data.split()[0] == "WHO":
             data = whoChannelHandler(data.split()[1], canais)
+
+        # Demais casos, comando invalido ou tentativa de mensagem
         else:
             if data[0] == "VISUALIZAR":
                 continue
             else:
                 data = "Comando invalido"
 
-        # =================================
+        # Testes para visualizar comando mudando estruturas definidas
         print(addressclientes)
         print(clientes)
         print(canais)
-        # =================================
 
-        connection.send(data.encode())
+        connection.send(data.encode()) # Envia processamento de volta ao cliente
 
 while True:
-    Client, address = ServerSideSocket.accept()
+    Client, address = ServerSideSocket.accept() # Aceita conexao
 
-    # MUDADO, MEXA CASO ERROOOOOOOO
-    # =================================
-    # Inicializa com valores arbitrarios
+    # Inicializa cliente com nicks arbitrarios e os adiciona nos dics
     if cond:
         nome_temp = 0
         cond = False
     addressclientes[address] = [str(nome_temp), Client]
     clientes[str(nome_temp)] = ["realnameinicial", '127.0.0.1', 2004]
     nome_temp += 1
-    # =================================
 
+    # Confirmacao de conexao do cliente no server
     print('Connected to: ' + address[0] + ':' + str(address[1]))
     start_new_thread(multi_threaded_client, (Client, ))
     ThreadCount += 1
